@@ -20,6 +20,7 @@ struct Poste{
 	int num;
 	int like;
 	int public;
+	//char *
 	Date* date;
 	Poste* suivant;
 };
@@ -27,7 +28,7 @@ struct Poste{
 typedef struct ListePostes ListePostes;
 struct ListePostes{
 	Poste* tete;
-	int taille;	
+	int taille;
 };
 
 typedef struct Utilisateur Utilisateur;
@@ -230,9 +231,9 @@ void Supp_amis(Utilisateur** la,Utilisateur* a, int* nb_amis){
 			u = *(la+b);
 			if(strcmp(u->login,a->login) == 0){
 				printf("A supprimer\n");
-				for(int i = b-1; i < (*nb_amis);i++){
-					*(a+i) = *(a+(i+1));
-				}
+				// for(int i = a; i < (*nb_amis);i++){
+
+				// }
 			}
 			b++;
 		}
@@ -265,25 +266,23 @@ void suppPoste_debut(ListePostes* lp){
 	free(lp->tete);
 	lp->tete = p;
 	lp->taille--;
-	if(lp->taille > 0){
-
 	for (int i = 0; i < lp->taille; i++)
 	{
 		p->num--;
 		p = p->suivant;
 	}
 }
-}
 
 void suppPoste_fin(ListePostes *lp){
     Poste* p = lp->tete;
-    while(p->suivant != NULL)
+    while(p->suivant->suivant != NULL)
     {
         p = p->suivant;
     }
-    free(p->poste);
+    free(p->suivant->poste);
 	free(p->date);
-	free(p);
+    free(p->suivant);
+    p->suivant = NULL;
     lp->taille--;
 }
 
@@ -417,6 +416,14 @@ void Set_Password(Utilisateur* u){
 void Set_Questions(Utilisateur* u){
 	int confirmation[2]={0};
 	char choix1[10],choix2[10],confirmation1[10],confirmation2[10];
+	// char *Listequestions[] = {"Quel est votre premier numero de telephone ?",
+	// 					"Quel est le nom de votre premier animal de compagnie ?",
+	// 					"Quel est votre couleur preferee ?",
+	// 					"Quel est votre lieu de naissance ?",
+	// 					"Quel est la marque de votre premiere voiture ?",
+	// 					"Quel est votre sport prefere ?"
+	// 					};
+
 	do{
 		do{
 			for(int i = 0;i < 6;i++){
@@ -576,10 +583,12 @@ void ins_fin(ListeUser **l,Utilisateur* u){
     }
     (*l)->taille++;
     n->suivant = u;
+    //viderBuffer();
 }
 
 void ins_tri(ListeUser **l){
     if(Liste_user_estVide(l)){
+    // viderBuffer();
     Utilisateur *e = (*l)->tete;
     Utilisateur *a = NULL;
     Utilisateur *b = Ajout_user(l);
@@ -619,7 +628,10 @@ void ins_tri(ListeUser **l){
         }
         if ((!e && !a->suivant) && (strcmp(a->login,b->login)!=0)){
             if (flag != 2)
-                {ins_fin(l,b);viderBuffer();}
+                {
+                    ins_fin(l,b);
+                    viderBuffer();
+                }
         }
 	}
 	else{Utilisateur* u = Ajout_user(l); ins_dans_vide(l,u);}
@@ -689,10 +701,6 @@ void load_rep(ListeUser **l)
             u = Charger_user();
             if (fscanf(fichier,"%s %s %s %s %d %s %d %s %d", u->prenom, u->nom, u->login, u->password, &u->numquestion1, u->reponse1, &u->numquestion2, u->reponse2, &u->etat) != EOF)
             {
-                printf("test : ");
-                printf("%s", u->prenom);
-                printf("%s", u->nom);
-                printf("%d", u->etat);
                 u->questions[0] = Listequestions[u->numquestion1];
                 u->questions[1] = Listequestions[u->numquestion2];
                 if((*l)->tete == NULL)
@@ -870,7 +878,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 
 		switch(choix){
 			case 1:
-				u->lp = init_ListePoste();		
+				u->lp = init_ListePoste();
 				menu_poste(u->lp);
 				break;
 
@@ -912,7 +920,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 				else{
 					printf("Mote de passe incorrecte\n");
 				}
-				
+
 				break;
 
 			case 4:
@@ -936,7 +944,7 @@ void Connexion(ListeUser** l,Utilisateur* u){
 		scanf("%s",password);
 		while(strcmp(password,u->password) != 0 && compteur){
 			compteur--;
-			printf("Mot de passe incorrecte, il vous reste %d essais\n",compteur+1 );
+			printf("Mot de passe incorrecte, il vous reste %d essais\n",compteur );
 			printf("Entrez votre mot de passe : ");
 			scanf("%s",password);
 		}
@@ -994,6 +1002,7 @@ void menu(ListeUser** l){
 				ins_tri(l);
 				break;
 			case 3:
+				save_rep(l);
 				choix = 4;
 				break;
 		}
@@ -1005,68 +1014,12 @@ void main()
 {
 
 	ListeUser** l = init_Liste();
-	load_rep(l);
+    load_rep(l);
 	menu(l);
-	save_rep(l);
 	Vider_Liste_Users(l);
 	free((*l));
 	free(l);
 
-
-	// Utilisateur** a =  (Utilisateur**)malloc_p(sizeof(Utilisateur*));
-	// Utilisateur* b = Ajout_user(l);
-	// viderBuffer();
-	// Utilisateur* c = Ajout_user(l);
-	// viderBuffer();
-	// Utilisateur* d = Ajout_user(l);
-	// viderBuffer();
-	// Utilisateur* e = Ajout_user(l);
-
-
-	// (*l)->tete = b;
-	// (*l)->tete->suivant = c;
-	// (*l)->tete->suivant->suivant = d;
-	// (*l)->tete->suivant->suivant->suivant = e;
-	// *a = (*l)->tete;
-
-	// a =(Utilisateur**)realloc_p(a,sizeof(Utilisateur*)*2);
-	// *(a+1) = (*l)->tete->suivant;
-
-	// a =(Utilisateur**)realloc_p(a,sizeof(Utilisateur*)*3);
-	// *(a+2) = (*l)->tete->suivant->suivant;
-
-	// a =(Utilisateur**)realloc_p(a,sizeof(Utilisateur*)*4);
-	// *(a+3) = (*l)->tete->suivant->suivant->suivant;
-
-	// Afficher_User_All(*(a+0));
-	// printf("############ LOGIN ========= %s\n",(*(a+0))->login );
-
-	// printf("2 ===========\n");
-
-	// Afficher_User_All(*(a+1));
-
-	// printf("3 ===========\n");
-
-	// Afficher_User_All(*(a+2));
-
-	// printf("4 ===========\n");
-
-	// Afficher_User_All(*(a+3));
-
-	// Free_User(e);
-	// Free_User(d);
-	// free(a);
-	// Afficher_User_All(b);
-
-	// printf("##############################################\n");
-	// Afficher_liste_user(l);
-
-
-	
-	// Free_User(c);
-	// Free_User(b);
-	// free((*l));
-	// free(l);
 }
 
 	// ListeUser** l = init_Liste();
