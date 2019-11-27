@@ -18,7 +18,7 @@ Poste* init_Poste(Poste* p){
 	p->like = 0;
 	p->public = 0;
 	p->suivant = NULL;
-	p->date = Ajout_Date(p->date);
+	p->date = Ajout_Date();
 
 	return p;
 }
@@ -94,7 +94,7 @@ void suppPoste_fin(ListePostes *lp){
         p = p->suivant;
     }
     free(p->suivant->poste);
-	free(p->date);
+	free(p->suivant->date);
     free(p->suivant);
     p->suivant = NULL;
     lp->taille--;
@@ -124,7 +124,9 @@ void suppPoste_milieu(ListePostes* lp, int n){
 void suppPost(ListePostes* lp, int n){
 	if(n > 0 && n <= lp->taille){
 		if(n == lp->taille && n > 1){
+			printf("FIIIIIIIIIIIIIIIIN\n");
 			suppPoste_fin(lp);
+			printf("FIIIIIIIIIIIIIIIIN2\n");
 		}
 		else if(n == 1){
 			suppPoste_debut(lp);
@@ -136,6 +138,8 @@ void suppPost(ListePostes* lp, int n){
 	else{
 		printf("Ce poste n'existe pas (O_O)\n");
 	}
+			printf("FIIIIIIIIIIIIIIIIN3\n");
+
 }
 
 void Ajout_post(ListePostes* lp){
@@ -144,13 +148,18 @@ void Ajout_post(ListePostes* lp){
 }
 
 void Afficher_ListePoste(ListePostes* lp){
-	if(lp->taille != 0){
+			printf("FIIIIIIIIIIIIIIIIN4     %d\n",lp->taille);
+
+	if(lp->taille > 0){
 	Poste* p = lp->tete;
+			printf("FIIIIIIIIIIIIIIIIN5     %d\n",lp->taille);
+
 	for(int i = 0;i < lp->taille;i++){
 		printf("Poste %d : %s\n\t",p->num,p->poste );
 		Afficher_Date(p->date);
 		printf("\n");
-		p = p->suivant;
+		if(p->suivant){
+		p = p->suivant;}
 	}}
 	else{printf("Vous n'avez encore aucun post n'attendez plus ¯\\_(^^)_/¯\n");}
 }
@@ -171,7 +180,7 @@ Poste* Select_poste(ListePostes* lp){
 }
 
 void Vider_ListePoste(ListePostes* lp){
-	while(lp->taille){
+	while(lp->taille > 0){
 		suppPoste_debut(lp);
 	}
 	free(lp);

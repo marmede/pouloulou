@@ -1,6 +1,7 @@
 #include "Prototype.h"
 #include "Post.h"
 #include "Utilisateur.h"
+#include "Amis.h"
 
 void* malloc_p(unsigned int s){
 	void * p;
@@ -13,94 +14,8 @@ void* realloc_p(void* p, unsigned int s){
     else{perror("Erreur allocation"); exit(0);}
 }
 
-void init_Liste_Amis(Liste_Amis** la){
-	(*la) = (Liste_Amis*)malloc_p(sizeof(Liste_Amis));
-	(*la)->taille = 0;
-	(*la)->tete = NULL;
-
-}
-
-void Ajout_Amis_Vide(Liste_Amis* la, Utilisateur* u){
-	la->tete = (Amis*)malloc_p(sizeof(Amis));
-	la->tete->Utilisateur = u;
-	la->tete->suivant = NULL;
-	la->taille++;
-}
-
-void Ajout_Amis_Fin(Liste_Amis* la, Utilisateur* u){
-	Amis* a = la->tete;
-	Amis* b = (Amis*)malloc_p(sizeof(Amis));
-	while(a->suivant){
-		a = a->suivant;
-	}
-	b->Utilisateur = u; 
-	b->suivant = NULL;
-	a->suivant = b;
-	la->taille++;
-}
-
-void Ajout_Amis(Liste_Amis* la,Utilisateur* m,Utilisateur* u){
-	//si ce n'est pas l'user actuel
-
-	if(la->taille){
-		Ajout_Amis_Fin(la,u);}
-	else{Ajout_Amis_Vide(la,u);}
-}
-
-void Supp_Amis_Debut(Liste_Amis* la){
-	Amis* a = la->tete->suivant;
-	free(la->tete);
-	la->tete = a;
-	la->taille--; 
-}
-
-void Supp_Amis_Fin(Liste_Amis* la){
-	Amis* a = la->tete;
-	while(a->suivant){
-		a = a->suivant;
-	}
-	la->taille--;
-	free(a);
-}
-
-void Supp_Amis_Milieu(Liste_Amis* la,int n){
-	Amis* a = la->tete;
-	Amis* c = a->suivant;
-	int flag = 0,i = 0;
-	while(!flag){
-		if(i == n){
-			a->suivant = c->suivant;
-			free(a);
-			flag = 1;
-		}
-		c = a;
-		a = a->suivant;
-		i++;
-	}
-}
-
-void Vider_Liste_Amis(Liste_Amis* la){
-		for(int i = 0;i < la->taille+1;i++){
-			Supp_Amis_Debut(la);
-		}
-		free(la);
-}
-
-void Afficher_Liste_Amis(Liste_Amis* la){
-		if(la->taille){
-		Amis* a = la->tete;
-		for(int i = 0;i < la->taille;i++){
-			printf("Numero %d \n",i+1);
-			Afficher_User_Light(a->Utilisateur);
-			a = a->suivant;
-			printf("\n");
-		}
-	}
-	else{printf("Pas d'amis... Mais Bashlink s'occupe de ca pour vous\n");}
-}
-
-Date* Ajout_Date(Date* d){
-    d = (Date*)malloc_p(sizeof(Date));
+Date* Ajout_Date(){
+    Date* d = (Date*)malloc_p(sizeof(Date));
     time_t t = time(&t);
     struct tm* info;
     info = localtime(&t);
@@ -155,7 +70,7 @@ Utilisateur* Charger_user()
 	u->numquestion1 = 0;
 	u->numquestion2 = 0;
 	u->etat = 0;
-    u->lp = NULL;
+    u->lp = init_ListePoste();
     u->suivant = NULL;
     u->nb_amis = 0;
     u->la = NULL;
@@ -235,7 +150,7 @@ void load_rep(ListeUser **l)
 
 }
 
-void menu_recherche(Utilisateur* u,Utilisateur* a){
+void menu_recherche(ListeUser** l,Utilisateur* u,Utilisateur* a){
 	char choix [10]="0";
 	int n = atoi(choix);
 	Poste* p = NULL;
@@ -247,20 +162,23 @@ void menu_recherche(Utilisateur* u,Utilisateur* a){
 
 		switch(atoi(choix)){
 			case 1:
-				Ajout_Amis(u->la,u,a);
+				Ajout_Amis(l,u->la,u,a);
 				break;
 
 			case 2:
 				printf("Unfollow\n");///////////////////////////////////////////////////////////
+				Unfollow(u->la,u,a->login);
 				break;
 
 			case 3:
-				Afficher_ListePoste(u->lp);
+				if(a->lp->tete){
+				Afficher_ListePoste(a->lp);}
+				else{printf("Cet utilisateur n'as encore rien poste\n");}
 				break;
 
 			case 4:
-				p = Select_poste(u->lp);
-				menu_p_post(p,u->lp);
+				p = Select_poste(a->lp);
+				menu_p_post(p,a->lp);
 				break;
 			case 5:
 				n = 6;
@@ -281,7 +199,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 	char nom[20],prenom[20];
 	while(n >= 0 && n < 5){
 		printf("--------------------------Bienvenue sur le Super Menu--------------------------\n");
-		if(u->nb_amis>0){
+		if(u->la->taille >0){
 			Afficher_Liste_Amis(u->la);
 		}
 		printf("1 - Post\n2 - Chercher un utilisateur\n3 - Desinscription\n4 - Deconnexion\n");
@@ -290,7 +208,6 @@ void super_menu(ListeUser** l,Utilisateur* u){
 
 		switch(atoi(choix)){
 			case 1:
-				u->lp = init_ListePoste();
 				menu_poste(u->lp);
 				break;
 
@@ -304,7 +221,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 					Utilisateur* a = find_user(l,nom,prenom);
 					if(a && strcmp(a->nom,nom) == 0 && strcmp(a->prenom,prenom) == 0){
 						Afficher_User_Light(a);
-						menu_recherche(u,a);
+						menu_recherche(l,u,a);
 					}
 					else{printf("Cet utilisateur n'existe pas (x__x)\n");}
 				}
@@ -315,7 +232,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 					Utilisateur* a = find_user(l,nom,NULL);
 					if(a && strcmp(a->login,nom) == 0){
 						Afficher_User_Light(a);
-						menu_recherche(u,a);
+						menu_recherche(l,u,a);
 					}
 					else{printf("Cet utilisateur n'existe pas (x__x)\n");}
 				}
@@ -343,7 +260,7 @@ void super_menu(ListeUser** l,Utilisateur* u){
 				n = 0;
 				break;
 		}
-		system("clear");
+		// system("clear");
 	}
 }
 
@@ -356,7 +273,7 @@ void Connexion(ListeUser** l,Utilisateur* u){
 		scanf("%s",password);
 		while(strcmp(password,u->password) != 0 && compteur){
 			compteur--;
-			printf("Mot de passe incorrecte, il vous reste %d essais\n",compteur );
+			printf("Mot de passe incorrecte, il vous reste %d essais\n",compteur+1 );
 			printf("Entrez votre mot de passe : ");
 			scanf("%s",password);
 		}
@@ -418,7 +335,7 @@ void menu(ListeUser** l){
 				n = 4;
 				break;
 		}
-		system("clear");
+		// system("clear");
 	}
 }
 
@@ -428,6 +345,7 @@ void main()
 	ListeUser** l = init_Liste();
 	load_rep(l);
 	menu(l);
+	printf("======================%d\n",(*l)->taille );
 	save_rep(l);
 	Vider_Liste_Users(l);
 	free((*l));

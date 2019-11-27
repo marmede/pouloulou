@@ -143,8 +143,9 @@ Utilisateur* Ajout_user(ListeUser** l){
 	Set_Password(u);
 	Set_Questions(u);
     u->etat = 1;
-    u->lp = NULL;
+    u->lp = init_ListePoste();
     u->la = NULL;
+    init_Liste_Amis(&u->la);
     u->nb_amis = 0;
     u->numquestion1 = 0;
     u->numquestion2 = 0;
@@ -159,12 +160,8 @@ void Free_User(Utilisateur* u){
 	free(u->nom);
 	free(u->login);
 	free(u->password);
-	if(u->lp){
-		Vider_ListePoste(u->lp);
-	}
-	if(u->la){
-		free(u->la);
-	}
+	Vider_ListePoste(u->lp);
+	Vider_Liste_Amis(u->la);
 	free(u);
 }
 
@@ -270,7 +267,9 @@ void supp_debut(ListeUser** l){
     Utilisateur *u = (*l)->tete;
     Free_User(u);
     (*l)->tete = n;
+	printf("D======================%d\n",(*l)->taille );
     (*l)->taille--;
+	printf("D======================%d\n",(*l)->taille );
 }
 
 void suppUser(ListeUser **l,Utilisateur* u){
@@ -280,7 +279,7 @@ void suppUser(ListeUser **l,Utilisateur* u){
     while(e && flag == 0){
 
         if(strcmp(u->login,e->login) == 0){
-            if(!a){supp_debut(l);}
+            if(!a){printf("DEBUT\n");;supp_debut(l);}
             else if(!e->suivant){
                 Free_User(u);
                 a->suivant = NULL;
@@ -291,7 +290,8 @@ void suppUser(ListeUser **l,Utilisateur* u){
             }
             flag = 1;
         }
-        if((*l)->taille>1){
+        if(!flag){
+        	printf("TEST\n");
         a = e;
         e = e->suivant;}
     }
@@ -300,7 +300,7 @@ void suppUser(ListeUser **l,Utilisateur* u){
 }
 
 void Vider_Liste_Users(ListeUser** l){
-	for(int i = (*l)->taille;i>0;i--){
+	while((*l)->taille){
         supp_debut(l);
     }
 }
